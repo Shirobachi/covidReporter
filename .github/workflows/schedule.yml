@@ -9,7 +9,7 @@ on:
 
 
 jobs:
-  build:
+  dataPush:
     runs-on: ubuntu-latest
 
     steps:
@@ -17,4 +17,16 @@ jobs:
 
       - shell: bash
         run: |
-          curl -s https://coronavirus-tracker-api.herokuapp.com/v2/latest | jq
+          webhook_url=${{ secrets.WEBHOOK_URL }}
+          api=$(curl https://coronavirus-tracker-api.herokuapp.com/v2/latest)
+          deaths=$(echo $api | jq .latest.deaths)
+          confirmed=$(echo $api | jq .latest.confirmed)
+
+          message="Deaths:\t$deaths\nConfirmed:\t$confirmed"
+
+          data="{\"content\":\"$message\"}"
+          curl \
+            -H "Content-Type: application/json" \
+            -d $data \
+            $webhook_url
+
